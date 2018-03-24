@@ -24,6 +24,34 @@
 #include <QWidget>
 #include <QTimer>
 #include <QGridLayout>
+#include <QApplication>
+
+osg::Node *CreateConvexHull()
+{
+    osg::ConvexHull* mesh = new osg::ConvexHull;
+    osg::Vec3Array* vertices = new osg::Vec3Array(4);
+    (*vertices)[0].set(9.0 + 0.0f, -1.0f + 2.0f, -1.0f + 0.0f);
+    (*vertices)[1].set(9.0 + 1.0f, -1.0f + 0.0f, -1.0f + 0.0f);
+    (*vertices)[2].set(9.0 + 2.0f, -1.0f + 2.0f, -1.0f + 0.0f);
+    (*vertices)[3].set(9.0 + 1.0f, -1.0f + 1.0f, -1.0f + 2.0f);
+    osg::UByteArray* indices = new osg::UByteArray(12);
+    (*indices)[0] = 0;
+    (*indices)[1] = 2;
+    (*indices)[2] = 1;
+    (*indices)[3] = 0;
+    (*indices)[4] = 1;
+    (*indices)[5] = 3;
+    (*indices)[6] = 1;
+    (*indices)[7] = 2;
+    (*indices)[8] = 3;
+    (*indices)[9] = 2;
+    (*indices)[10] = 0;
+    (*indices)[11] = 3;
+    mesh->setVertices(vertices);
+    mesh->setIndices(indices);
+    
+    return new osg::ShapeDrawable(mesh);
+}
 
 class ViewerWidget : public QWidget, public osgViewer::CompositeViewer
 {
@@ -35,15 +63,26 @@ public:
         // disable the default setting of viewer.done() by pressing Escape.
         setKeyEventSetsDone(0);
 
-        QWidget* widget1 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), osgDB::readRefNodeFile("cow.osgt"));
-        QWidget* widget2 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), osgDB::readRefNodeFile("glider.osgt"));
-        QWidget* widget3 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), osgDB::readRefNodeFile("axes.osgt"));
-        QWidget* widget4 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), osgDB::readRefNodeFile("fountain.osgt"));
-
         float radius = 0.8f;
         float height = 1.5f;
         osg::TessellationHints* hints = new osg::TessellationHints;
         hints->setDetailRatio(0.5f);
+
+        auto sphere = new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(0.0f, 0.0f, 0.0f), radius), hints);
+        sphere->setColor(osg::Vec4(207./256, 181./256, 59./256, 1.0f));
+
+        auto box = new osg::ShapeDrawable(new osg::Box(osg::Vec3(2.0f, 0.0f, 0.0f), 2 * radius), hints);
+
+        auto cylinder = new osg::ShapeDrawable(new osg::Cylinder(osg::Vec3(6.0f, 0.0f, 0.0f), radius, height), hints);
+        cylinder->setColor(osg::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+
+        auto capsule = new osg::ShapeDrawable(new osg::Capsule(osg::Vec3(8.0f, 0.0f, 0.0f), radius, height), hints);
+
+        QWidget* widget1 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), sphere);
+        QWidget* widget2 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), box);
+        QWidget* widget3 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), cylinder);
+        QWidget* widget4 = addViewWidget(createGraphicsWindow(0, 0, 100, 100), CreateConvexHull());
+
         auto cone = new osg::ShapeDrawable(new osg::Cone(osg::Vec3(4.0f, 0.0f, 0.0f), radius, height), hints);
         cone->setColor(osg::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
@@ -112,44 +151,33 @@ protected:
 };
 
 
-osg::Geode* createShapes()
-{
-    osg::Geode* geode = new osg::Geode();
+//osg::Geode* createShapes()
+//{
+//    osg::Geode* geode = new osg::Geode();
+//
+//    // ---------------------------------------
+//    // Set up a StateSet to texture the objects
+//    // ---------------------------------------
+//    osg::StateSet* stateset = new osg::StateSet();
+//
+//    stateset->setMode(GL_LIGHTING, osg::StateAttribute::ON);
+//
+//    geode->setStateSet(stateset);
+//
+//    float radius = 0.8f;
+//    float height = 1.5f;
+//
+//    osg::TessellationHints* hints = new osg::TessellationHints;
+//    hints->setDetailRatio(0.5f);
+//
+//    auto shape = new osg::ShapeDrawable(new osg::Cone(osg::Vec3(4.0f, 0.0f, 0.0f), radius, height), hints);
+//    shape->setColor(osg::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+//    geode->addDrawable(shape);
+//
+//    return geode;
+//}
 
-    // ---------------------------------------
-    // Set up a StateSet to texture the objects
-    // ---------------------------------------
-    osg::StateSet* stateset = new osg::StateSet();
-
-    stateset->setMode(GL_LIGHTING, osg::StateAttribute::ON);
-
-    geode->setStateSet(stateset);
-
-    float radius = 0.8f;
-    float height = 1.5f;
-
-    osg::TessellationHints* hints = new osg::TessellationHints;
-    hints->setDetailRatio(0.5f);
-
-    auto shape = new osg::ShapeDrawable(new osg::Cone(osg::Vec3(4.0f, 0.0f, 0.0f), radius, height), hints);
-    shape->setColor(osg::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    geode->addDrawable(shape);
-
-    return geode;
-}
-
-int main_old(int, char **)
-{
-    // construct the viewer.
-    osgViewer::Viewer viewer;
-
-    // add model to viewer.
-    viewer.setSceneData(createShapes());
-
-    return viewer.run();
-}
-
-#include <QApplication>
+#include "mainwindow.h"
 
 int main(int argc, char** argv)
 {
@@ -174,8 +202,17 @@ int main(int argc, char** argv)
 #endif
 
     QApplication app(argc, argv);
-    ViewerWidget* viewWidget = new ViewerWidget(0, Qt::Widget, threadingModel);
-    viewWidget->setGeometry(100, 100, 800, 600);
-    viewWidget->show();
+
+    auto mainWindow = new MainWindow();
+#if 1
+    ViewerWidget* viewWidget = new ViewerWidget(mainWindow->centralWidget(), Qt::Widget, threadingModel);
+    mainWindow->addViewer(viewWidget);
+#else
+    //auto widget = new QWidget(mainWindow->centralWidget());
+    //widget->setStyleSheet("background-color:green;");
+#endif
+    
+    mainWindow->show();
+
     return app.exec();
 }
