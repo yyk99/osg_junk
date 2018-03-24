@@ -14,6 +14,8 @@ set (TARGET_SRC
     02_HelloConeQt.cpp
     mainwindow.cpp
     mainwindow.h
+    viewerwidget.cpp
+    viewerwidget.h
 )
 
 qt5_wrap_cpp(TARGET_MOC_FILES ${TARGET_SRC})
