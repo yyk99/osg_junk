@@ -18,6 +18,11 @@
 // for the grid data..
 #include "terrain_coords.h"
 
+// Bezier stuff
+typedef float number_t;
+#include <vector>
+//
+
 osg::Geode* createTerrain()
 {
     osg::Geode* geode = new osg::Geode();
@@ -183,6 +188,71 @@ title("3-D plot");
 endfunction
 
 #endif
+
+
+//#
+//# u - scalar
+//# P - (n, m, 3) is an (n X m) matrix of 3D-points
+//#
+//function S = deCasteljau2(u0, v0, P)
+//  if nargin < 3
+//    error("usage: deCasteljau2(u0, v0, P)");
+//  endif
+//
+//  n = size(P, 2);
+//  m = size(P, 1);
+//  
+//  if (n <= m)
+//    Q = zeros(m, 3);
+//    for j = 1:m
+//      Q(j,:) = deCasteljau1(u0, squeeze(P(j,:,:)));
+//    endfor
+//    S = deCasteljau1(v0, Q);
+//  else
+//    Q = zeros(n, 3);
+//    for i = 1:n
+//      Q(i, :) = deCasteljau1(v0, squeeze(P(:,i,:)));
+//    endfor
+//    S = deCasteljau1(u0, Q);
+//  endif
+//endfunction
+
+//#
+//# u - scalar
+//# P - (n, 3) vector of points 3D
+//#
+//function B = deCasteljau1(u, P)
+//  if nargin < 2
+//    error("usage: deCasteljau1(u, P)");
+//  endif
+//
+//  n = size(P, 1);
+//  Q = P;
+//  
+//  for k = 1:n-1
+//    for i = 1:n-k
+//      Q(i,:) = (1.0 - u)*Q(i,:) + u * Q(i+1,:);
+//    endfor
+//  endfor
+//  
+//  B = Q(1,:);
+//endfunction
+
+#include <cassert>
+
+void deCasteljau1(std::vector<number_t> const &P, size_t n, number_t u, number_t &C)
+{
+    assert(P.size() == n + 1);
+    std::vector<number_t> Q(P); // Use local array so we do not 
+                                // destroy control points
+    for (size_t k = 1; k <= n; k++) {
+        for (size_t i = 0; i <= n - k; i++) {
+            Q[i] = (1.0 - u)*Q[i] + u * Q[i + 1];
+        }
+    }
+
+    C = Q[0];
+}
 
 //
 osg::Geode *plot3_b3()
